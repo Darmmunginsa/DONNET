@@ -237,7 +237,7 @@ var Advanced = (function () {
           probability =
             q.dealStage === "won" ? 100 : Number(q.probability ?? 50);
         const net = q.subtotal - q.discount;
-        months[month] ??= { month, pipeline: 0, weighted: 0, count: 0 };
+        if (!months[month]) months[month] = { month, pipeline: 0, weighted: 0, count: 0 };
         months[month].pipeline = round(months[month].pipeline + net);
         months[month].weighted = round(
           months[month].weighted + (net * probability) / 100,
