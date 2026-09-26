@@ -1,0 +1,10 @@
+dist/
+.clasp.json
+.preview-data.json
+.preview-data.json.tmp
+.preview-files.json
+node_modules/
+test-results/
+.env*
+deployment.local.json
+!.env.example

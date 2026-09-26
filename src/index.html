@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>D On Net · Workspace</title>
+    <!-- STYLES -->
+  </head>
+  <body>
+    <section id="login" class="login-wrap">
+      <div class="login-story">
+        <div class="brand"><span class="brand-mark">D</span> D ON NET</div>
+        <div>
+          <div class="eyebrow">ONE CONNECTED WORKSPACE</div>
+          <h1>ทุกงานเชื่อมกัน<br />ทุกทีมไปต่อได้</h1>
+          <p>งานขาย จัดซื้อ และทีมช่าง<br />ทำงานบนข้อมูลชุดเดียวกัน</p>
+          <div class="story-flow">
+            <span>01 · SALE</span><i>→</i><span>02 · PURCHASE</span><i>→</i
+            ><span>03 · TECH</span>
+          </div>
+        </div>
+        <small>iT Services · Business workspace</small>
+      </div>
+      <div class="login-side">
+        <form id="login-form" class="login-card">
+          <div class="eyebrow">ยินดีต้อนรับ</div>
+          <h2>เข้าสู่พื้นที่ทำงาน</h2>
+          <p class="muted">ใช้ Gmail ที่ผู้ดูแลเพิ่มไว้ในระบบ</p>
+          <div id="login-fields">
+            <label
+              >อีเมล<input
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                placeholder="name@gmail.com" /></label
+            ><label id="otp-label" hidden
+              >รหัสยืนยัน 8 หลัก<input
+                name="code"
+                inputmode="numeric"
+                pattern="[0-9]{8}"
+                maxlength="8"
+                autocomplete="one-time-code"
+            /></label>
+          </div>
+          <button class="primary full" type="submit" id="login-submit">
+            ส่งรหัสยืนยัน
+          </button>
+          <p id="login-message" role="status"></p>
+          <button id="resend" type="button" class="text-btn" hidden>
+            ขอรหัสใหม่
+          </button>
+          <div class="login-foot">
+            สิทธิ์การเข้าถึงขึ้นอยู่กับบทบาทที่ได้รับ
+          </div>
+        </form>
+      </div>
+    </section>
+    <div id="shell" class="shell" hidden>
+      <aside class="sidebar">
+        <a href="#dashboard" class="brand"
+          ><span class="brand-mark">D</span
+          ><span>D ON NET<small>BUSINESS WORKSPACE</small></span></a
+        >
+        <div class="nav-label">พื้นที่ทำงาน</div>
+        <nav id="nav"></nav>
+        <div class="sidebar-bottom">
+          <span class="live-dot"></span> ข้อมูลกลาง · สามทีมเชื่อมกัน
+          <div id="environment"></div>
+        </div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <span class="breadcrumb">Workspace</span><span class="slash">/</span
+            ><span id="page-label">ภาพรวม</span>
+          </div>
+          <div class="top-actions">
+            <button id="refresh" class="icon-btn" title="โหลดข้อมูลใหม่">
+              ↻</button
+            ><span id="user-name"></span
+            ><span class="avatar" id="avatar">D</span
+            ><button id="sign-out" class="text-btn">ออก</button>
+          </div>
+        </header>
+        <div id="preview-banner" class="preview-banner" hidden>
+          โหมดทดลองในเครื่อง · ข้อมูลนี้ไม่ได้บันทึกลง Google Sheets
+        </div>
+        <main id="main" tabindex="-1"></main>
+        <footer class="app-footer">
+          D On Net <span>SalePro · PurchasePro · Tech</span>
+        </footer>
+      </div>
+    </div>
+    <dialog id="modal">
+      <div class="modal-head">
+        <h2 id="modal-title"></h2>
+        <button
+          type="button"
+          id="close-modal"
+          class="icon-btn"
+          aria-label="ปิด"
+        >
+          ×
+        </button>
+      </div>
+      <form id="editor">
+        <div id="modal-body"></div>
+        <div class="modal-footer">
+          <span id="form-error" role="alert"></span
+          ><button type="button" id="cancel-modal">ยกเลิก</button
+          ><button type="submit" class="primary" id="save-button">
+            บันทึก
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+    <div id="print-area"></div>
+    <!-- SCRIPT -->
+  </body>
+</html>
