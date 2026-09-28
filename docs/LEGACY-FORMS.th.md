@@ -1,6 +1,6 @@
 # ปรับเครื่องมือและเอกสารตามระบบเดิม — 27 กันยายน 2026
 
-สถานะ: โค้ดรุ่นทดลองใน branch `codex/legacy-quote-documents` ยังไม่ติดตั้งแทน Apps Script production
+สถานะ: เผยแพร่บน Apps Script production แล้ว — Version 2 วันที่ 28 กันยายน 2026 จาก source commit `4e2d471` โดยอัปเดต deployment เดิมและคงสิทธิ์เดิม สำรองฐานข้อมูลก่อนอัปเกรดเรียบร้อย
 
 ## รูปแบบอ้างอิง
 

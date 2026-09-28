@@ -1,4 +1,4 @@
-> อัปเดตล่าสุด 28 กันยายน 2026: รุ่นทดลองปรับแบบเอกสารเดิมและเพิ่มคลังบริษัท ดู [LEGACY-FORMS.th.md](LEGACY-FORMS.th.md) และ [COMPANY-LIBRARY.th.md](COMPANY-LIBRARY.th.md) ข้อความด้านล่างเป็นบันทึกสถานะเดิมของรุ่น 0.2
+> อัปเดตล่าสุด 28 กันยายน 2026: เผยแพร่ Apps Script Version 2 แล้ว: ปรับแบบเอกสารเดิมและเพิ่มคลังบริษัท ดู [LEGACY-FORMS.th.md](LEGACY-FORMS.th.md) และ [COMPANY-LIBRARY.th.md](COMPANY-LIBRARY.th.md) ข้อความด้านล่างเป็นบันทึกสถานะเดิมของรุ่น 0.2
 
 # สถานะรุ่น 0.2 — โค้ดพร้อมติดตั้งทดสอบ
 

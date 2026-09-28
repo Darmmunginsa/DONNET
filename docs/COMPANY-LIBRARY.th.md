@@ -15,7 +15,7 @@
 
 รุ่นนี้เพิ่มตาราง `CompanyFiles` โดย `upgrade_()` เก็บ metadata ใน Sheets และใช้ Attachments เดิมเชื่อมไฟล์ ต้อง build และแทน Domain.gs, Server.gs, Client.html, Styles.html พร้อมเพิ่มตารางก่อน deploy รุ่นใหม่ ดูขั้นตอนอัปเกรดและสำรองใน LEGACY-FORMS.th.md
 
-ยังไม่ติดตั้งแทน Apps Script production; ตรวจหน้าในเครื่องที่ http://127.0.0.1:4175/#company-library ได้ก่อน
+ติดตั้งบน Apps Script production แล้ว — Version 2 วันที่ 28 กันยายน 2026 ใช้ deployment URL เดิม ตรวจโครงสร้างฐานข้อมูลบน Google สำเร็จ และนำ wrapper อัปเกรดออกก่อนเผยแพร่ การทดสอบ upload/download และบทบาทด้านล่างเป็นผลจากระบบในเครื่อง ไม่ใช่ผลทดสอบหลังล็อกอินบน production
 
 ## ผลทดสอบ 28 กันยายน 2026
 
