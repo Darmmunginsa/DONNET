@@ -21,13 +21,48 @@
   color: #8c7136;
   font-size: 11px;
 }
-.document-logo { max-width: 170px; max-height: 65px; object-fit: contain; }
-.document-signature { width: 150px; height: 65px; object-fit: contain; }
-.document-stamp { width: 80px; height: 65px; object-fit: contain; margin-left: 8px; }
-.signature-space { height: 65px; }
-.copy-label { text-align: right; color: var(--copy-color); font-size: 11px; border-bottom: 2px solid var(--copy-color); padding-bottom: 8px; margin-bottom: 20px; }
-.sidebar nav { overflow-y: auto; min-height: 0; }
-@media print { .document-copy { break-after: page; } .document-copy:last-child { break-after: auto; } .document-copy .document-sign { break-inside: avoid; } }
+.document-logo {
+  max-width: 170px;
+  max-height: 65px;
+  object-fit: contain;
+}
+.document-signature {
+  width: 150px;
+  height: 65px;
+  object-fit: contain;
+}
+.document-stamp {
+  width: 80px;
+  height: 65px;
+  object-fit: contain;
+  margin-left: 8px;
+}
+.signature-space {
+  height: 65px;
+}
+.copy-label {
+  text-align: right;
+  color: var(--copy-color);
+  font-size: 11px;
+  border-bottom: 2px solid var(--copy-color);
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+.sidebar nav {
+  overflow-y: auto;
+  min-height: 0;
+}
+@media print {
+  .document-copy {
+    break-after: page;
+  }
+  .document-copy:last-child {
+    break-after: auto;
+  }
+  .document-copy .document-sign {
+    break-inside: avoid;
+  }
+}
 * {
   box-sizing: border-box;
 }
@@ -1051,4 +1086,383 @@ dialog::backdrop {
     size: A4;
     margin: 8mm;
   }
+}
+/* Legacy paper forms. Keep paper typography separate from application tables. */
+#modal:has(#quote-workbench) {
+  width: min(1450px, 96vw);
+  max-width: 1450px;
+}
+.quote-tools {
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.line-editor textarea {
+  min-width: 220px;
+  min-height: 66px;
+}
+.line-editor .delete-col {
+  min-width: 128px;
+}
+.line-editor .quote-line-total {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.line-editor .below-cost {
+  background: #fff0ee;
+}
+.line-editor .special-line {
+  background: #f1f5f9;
+}
+.line-editor .kind-col {
+  min-width: 130px;
+}
+.line-editor .kind-col input {
+  margin-bottom: 6px;
+}
+#quote-live-totals {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  padding: 20px;
+  background: #eef4fa;
+  flex-wrap: wrap;
+}
+#modal details {
+  border-top: 1px solid #ddd;
+  padding: 16px 0;
+}
+#modal summary {
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+#quote-preview {
+  width: calc(210mm + 60px);
+  max-width: 96vw;
+  max-height: 95vh;
+  padding: 0;
+  background: #dbe1e8;
+}
+.preview-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 16px;
+  background: white;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.preview-paper {
+  padding: 20px;
+  overflow: auto;
+}
+.legacy-copy {
+  position: relative;
+  color: #1a1a2e;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 12px;
+  background: white;
+}
+.legacy-copy-label {
+  text-align: right;
+  padding: 4px 12mm;
+  font-size: 11px;
+  font-weight: bold;
+}
+.pdf-page {
+  box-sizing: border-box;
+  width: 194mm;
+  min-height: 270mm;
+  margin: 0 auto;
+  background: white;
+  padding: 8mm 6mm;
+  display: flex;
+  flex-direction: column;
+  break-after: page;
+}
+.pdf-page:last-child {
+  break-after: auto;
+}
+.pdf-page table {
+  white-space: normal;
+}
+.pdf-page th,
+.pdf-page td {
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: normal;
+}
+.pdf-page tr {
+  break-inside: avoid;
+}
+.pdf-page thead {
+  display: table-header-group;
+}
+.pdf-page p {
+  margin: 6px 0;
+}
+.pdf-footer-block {
+  break-inside: avoid;
+}
+.legacy-head {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 22px;
+  line-height: 1.5;
+  border-bottom: 2px solid #1a3a5c;
+  padding-bottom: 12px;
+}
+.legacy-head h2 {
+  color: #1a3a5c;
+  margin: 4px 0;
+  font-size: 20px;
+}
+.legacy-title {
+  text-align: center;
+  border: 2px solid #1a3a5c;
+  border-radius: 10px;
+  padding: 12px;
+  color: #1a3a5c;
+}
+.legacy-title strong {
+  font-size: 17px;
+}
+.legacy-title h3 {
+  margin: 10px 0;
+}
+.form-logo {
+  max-width: 180px;
+  max-height: 65px;
+  object-fit: contain;
+}
+.legacy-parties {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  border: 1px solid #1a3a5c;
+  border-radius: 10px;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+.legacy-parties > div {
+  padding: 10px;
+}
+.legacy-parties > div + div {
+  border-left: 1px solid #1a3a5c;
+}
+.non-tax {
+  text-align: right;
+  font-weight: bold;
+}
+.legacy-items {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.legacy-items th {
+  background: #1a3a5c;
+  color: white;
+  text-align: center;
+  font-weight: 600;
+  padding: 8px 4px;
+}
+.legacy-items th:first-child {
+  width: 6%;
+}
+.legacy-items th:nth-child(2) {
+  width: 42%;
+}
+.legacy-items th:nth-child(3),
+.legacy-items th:nth-child(4) {
+  width: 8%;
+}
+.legacy-items td {
+  border-left: 1px solid #8997a6;
+  border-right: 1px solid #8997a6;
+  padding: 6px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.legacy-items td:nth-child(n + 3) {
+  text-align: right;
+}
+.legacy-items .group {
+  background: #edf2f7;
+  font-weight: bold;
+}
+.legacy-filler {
+  height: 90px;
+  border-bottom: 1px solid #8997a6;
+  color: #888;
+}
+.legacy-filler td {
+  vertical-align: bottom;
+}
+.legacy-bottom {
+  display: grid;
+  grid-template-columns: 1fr 290px;
+  gap: 20px;
+  margin-top: 12px;
+  break-inside: avoid;
+}
+.legacy-totals {
+  border-collapse: collapse;
+  width: 100%;
+}
+.legacy-totals th {
+  background: #1a3a5c;
+  color: white;
+  padding: 6px;
+  text-align: left;
+  font-size: 11px;
+}
+.legacy-totals td {
+  text-align: right;
+  padding: 6px;
+  border: 1px solid #cbd5e1;
+}
+.legacy-totals tr:last-child {
+  font-weight: bold;
+}
+.legacy-terms {
+  margin: 12px 0;
+  line-height: 1.6;
+}
+.legacy-sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  text-align: center;
+  margin-top: 30px;
+  break-inside: avoid;
+}
+.legacy-sign > div {
+  position: relative;
+  border-bottom: 1px solid #bbb;
+}
+.legacy-sign .signature-space {
+  height: 65px;
+}
+.form-signature,
+.form-stamp {
+  position: absolute;
+  height: 60px;
+  max-width: 130px;
+  object-fit: contain;
+  top: 0;
+  left: 25%;
+}
+.form-stamp {
+  left: 58%;
+}
+.legacy-page {
+  text-align: right;
+  margin-top: auto;
+  padding-top: 12px;
+  color: #888;
+}
+@media print {
+  .legacy-copy {
+    break-after: page;
+  }
+  .legacy-copy:last-child {
+    break-after: auto;
+  }
+  .pdf-page {
+    width: 100%;
+    margin: 0;
+    padding: 5mm;
+    min-height: 267mm;
+  }
+  .legacy-copy-label {
+    padding: 0 5mm;
+  }
+  .legacy-items th,
+  .legacy-totals th {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .pdf-page * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+.pdf-preview table {
+  width: auto;
+}
+.pdf-preview th,
+.pdf-preview td {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: inherit;
+}
+.pdf-preview tbody tr:hover {
+  background: transparent;
+}
+.pdf-preview td {
+  vertical-align: top;
+}
+.pdf-preview .pdf-items-wrap table {
+  width: 100%;
+}
+.legacy-delivery .legacy-head,
+.legacy-delivery .legacy-parties {
+  border-color: #e07b1f;
+}
+.legacy-delivery h2 {
+  color: #e07b1f;
+}
+.legacy-delivery .legacy-items th {
+  background: #e07b1f;
+}
+.legacy-delivery .legacy-items th:nth-child(2) {
+  width: 68%;
+}
+.legacy-delivery .legacy-items th:nth-child(3) {
+  width: 26%;
+}
+.legacy-delivery .legacy-items td {
+  border-color: #f0d8c2;
+  border-bottom: 1px solid #f0d8c2;
+}
+.library-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.library-category {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 18px;
+  background: white;
+  border: 1px solid #dce5e0;
+  border-radius: 12px;
+}
+.library-category strong {
+  font-size: 20px;
+  color: #17654f;
+}
+.library-category.selected {
+  background: #edf7f2;
+  border-color: #17654f;
+}
+.library-filters {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  margin: 24px 0;
+}
+.library-filters label:first-child {
+  flex: 1;
+}
+.library-filters input,
+.library-filters select {
+  width: 100%;
 }

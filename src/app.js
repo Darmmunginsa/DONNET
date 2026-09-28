@@ -344,7 +344,7 @@ function files(entity, id) {
   );
 }
 function totals(q) {
-  return `<div class="totals"><div><span>รวมรายการ</span><span>${money(q.subtotal)}</span></div><div><span>ส่วนลด ${q.discountPct}%</span><span>${money(q.discount)}</span></div><div><span>VAT ${q.vatPct}%</span><span>${money(q.vat)}</span></div><div class="grand"><span>รวมสุทธิ</span><span>฿ ${money(q.total)}</span></div></div>`;
+  return `<div class="totals"><div><span>รวมรายการ</span><span>${money(q.subtotal)}</span></div><div><span>ส่วนลด ${q.presentation?.discountMode === "amount" ? "(บาท)" : money(q.discountPct) + "%"}</span><span>${money(q.discount)}</span></div><div><span>VAT ${q.vatPct}%</span><span>${money(q.vat)}</span></div><div class="grand"><span>รวมสุทธิ</span><span>฿ ${money(q.total)}</span></div></div>`;
 }
 function quoteDetail(id) {
   const q = row("Quotations", id);
@@ -362,13 +362,13 @@ function quoteDetail(id) {
       `${esc(q.number)} · ${displayDate(q.date)} · ${esc(q.ownerEmail)}`,
       status(q.status),
     ) +
-    `<div class="actions">${own(q) && ["draft", "rejected"].includes(q.status) ? button("แก้ไข", "edit-quote", id) + button("ส่งอนุมัติ", "submit-quote", id, "primary") : ""}${q.status === "pending" && q.approverEmail === state.user.email ? button("อนุมัติ", "approve", id, "primary") + button("ไม่อนุมัติ", "reject", id, "danger") : ""}${own(q) && q.status === "approved" && !q.closed ? button("ส่งจัดซื้อ", "handoff", id) + button("มอบหมายช่าง", "assign-job", id) + button("ปิดงานขาย", "close-quote", id) : ""}${has("sales", "finance") && q.status === "approved" && !q.closed ? button("บันทึกรับเงิน", "payment", id) : ""}${button("พิมพ์ใบเสนอราคา", "print-quote", id)}${q.status === "approved" ? button("ใบส่งของ / แจ้งหนี้", "print-invoice", id) : ""}</div><div class="detail-grid"><div>${panel(
+    `<div class="actions">${own(q) && ["draft", "rejected"].includes(q.status) ? button("แก้ไข", "edit-quote", id) + button("ส่งอนุมัติ", "submit-quote", id, "primary") : ""}${q.status === "pending" && q.approverEmail === state.user.email ? button("อนุมัติ", "approve", id, "primary") + button("ไม่อนุมัติ", "reject", id, "danger") : ""}${own(q) && q.status === "approved" && !q.closed ? button("ส่งจัดซื้อ", "handoff", id) + button("มอบหมายช่าง", "assign-job", id) + button("ปิดงานขาย", "close-quote", id) : ""}${has("sales", "finance") && q.status === "approved" && !q.closed ? button("บันทึกรับเงิน", "payment", id) : ""}${button("พิมพ์ใบเสนอราคา", "print-quote", id)}${q.status === "approved" ? button("ใบส่งของ / แจ้งหนี้", "print-invoice", id) + button("ใบส่งของชั่วคราว", "print-temp-delivery", id) : ""}</div><div class="detail-grid"><div>${panel(
       "รายการสินค้า",
       table(
         ["รายการ", "จำนวน", "ราคา/หน่วย", "รวม"],
         items.map((i) =>
           i.type === "item"
-            ? `<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.partNo)} ${esc(i.description)}</small></td><td>${i.qty} ${esc(i.unit)}</td><td>${money(i.price)}</td><td class="right">${money(i.total)}</td></tr>`
+            ? `<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.partNo)} ${esc(i.description)}</small></td><td>${i.qty} ${esc(i.unit)}</td><td>${i.priceText ? esc(i.priceText) : money(i.price)}</td><td class="right">${i.priceText ? esc(i.priceText) : money(i.total)}</td></tr>`
             : `<tr><td colspan="4">${esc(i.name || i.description || "—")}</td></tr>`,
         ),
       ) +
@@ -581,7 +581,7 @@ function jobDetail(id) {
       esc(j.techName) + " · นัดหมาย " + displayDate(j.scheduledAt),
       status(j.status),
     ) +
-    `<div class="actions">${can && !["completed", "cancelled"].includes(j.status) ? button({ assigned: "รับงาน", accepted: "เริ่มดำเนินการ", inprogress: "บันทึกส่งมอบงาน" }[j.status], "advance-job", id, "primary") + button("+ ค่าใช้จ่าย", "expense", id) : ""}</div><div class="detail-grid"><div>${panel("รายละเอียดหน้างาน", `<div class="detail-meta"><span>ผู้ติดต่อ<strong>${esc(j.contact || "—")}</strong></span><span>โทรศัพท์<strong>${esc(j.phone || "—")}</strong></span></div><h3 class="form-section">สถานที่</h3><p class="pre-line">${esc(j.location)}</p><h3>อุปกรณ์ / สิ่งที่ต้องเตรียม</h3><p class="pre-line">${esc(j.materials || "—")}</p><h3>หมายเหตุ</h3><p class="pre-line">${esc(j.note || "—")}</p>${j.completionNote ? `<h3>สรุปการส่งมอบ</h3><p class="pre-line">${esc(j.completionNote)}</p>` : ""}`)}${panel("รูปหน้างานและหลักฐาน", files("TechJobs", id))}</div><div>${panel(
+    `<div class="actions">${j.status !== "cancelled" ? button("ใบส่งของชั่วคราว", "print-job-delivery", id) : ""}${can && !["completed", "cancelled"].includes(j.status) ? button({ assigned: "รับงาน", accepted: "เริ่มดำเนินการ", inprogress: "บันทึกส่งมอบงาน" }[j.status], "advance-job", id, "primary") + button("+ ค่าใช้จ่าย", "expense", id) : ""}</div><div class="detail-grid"><div>${panel("รายละเอียดหน้างาน", `<div class="detail-meta"><span>ผู้ติดต่อ<strong>${esc(j.contact || "—")}</strong></span><span>โทรศัพท์<strong>${esc(j.phone || "—")}</strong></span></div><h3 class="form-section">สถานที่</h3><p class="pre-line">${esc(j.location)}</p><h3>อุปกรณ์ / สิ่งที่ต้องเตรียม</h3><p class="pre-line">${esc(j.materials || "—")}</p><h3>หมายเหตุ</h3><p class="pre-line">${esc(j.note || "—")}</p>${j.completionNote ? `<h3>สรุปการส่งมอบ</h3><p class="pre-line">${esc(j.completionNote)}</p>` : ""}`)}${panel("รูปหน้างานและหลักฐาน", files("TechJobs", id))}</div><div>${panel(
       "ค่าใช้จ่ายของงาน",
       `<div class="stat-value">฿ ${money(expenses.reduce((s, e) => s + e.amount, 0))}</div>` +
         (expenses.length
@@ -1264,7 +1264,7 @@ async function action(name, id, el) {
       }
       openModal(
         "แนบรูป / เอกสาร",
-        `<label>เลือกไฟล์ (ไม่เกิน 5 MB)<input name="file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" required></label>${references.length ? select("relatedReference", "เชื่อมหลักฐานกับรายการ (ไม่บังคับ)", references, "", false) : ""}`,
+        `<label>เลือกไฟล์ (ไม่เกิน 5 MB)<input name="file" type="file" accept="${entity === "CompanyFiles" ? ".pdf,.png,.jpg,.jpeg,.webp,.docx,.xlsx,.pptx,.txt,.csv" : "image/png,image/jpeg,image/webp,application/pdf"}" required></label>${references.length ? select("relatedReference", "เชื่อมหลักฐานกับรายการ (ไม่บังคับ)", references, "", false) : ""}`,
         async () => {
           const f = $("[name=file]").files[0];
           if (!f || f.size > 5 * 1024 * 1024)
@@ -1278,6 +1278,10 @@ async function action(name, id, el) {
           const req = request("attachFile", {
             entity,
             entityId,
+            version:
+              entity === "CompanyFiles"
+                ? row("CompanyFiles", entityId).version
+                : undefined,
             fileName: f.name,
             fileSize: f.size,
             fileStamp: f.lastModified,
@@ -1288,7 +1292,19 @@ async function action(name, id, el) {
           });
           await rpc("uploadAttachment", token, req, {
             name: f.name,
-            mimeType: f.type,
+            mimeType:
+              (f.name.toLowerCase().endsWith(".csv") &&
+              f.type === "application/vnd.ms-excel"
+                ? "text/csv"
+                : f.type) ||
+              {
+                docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                txt: "text/plain",
+                csv: "text/csv",
+              }[f.name.split(".").pop().toLowerCase()] ||
+              "application/octet-stream",
             base64: b64,
           });
           lastRequest = null;

@@ -279,6 +279,12 @@ var Domain = (function () {
     return j;
   }
   function visibleEntity(db, u, entity, id, write) {
+    if (entity === "CompanyFiles") {
+      permit(u, write ? [] : ["finance"]);
+      const record = get(db, "CompanyFiles", id);
+      if (write) assert(!record.archived, "คืนเอกสารจากแฟ้มเก่าก่อนแนบไฟล์");
+      return record;
+    }
     if (entity === "Company") {
       if (write) permit(u, []);
       return get(db, "Company", id);
@@ -385,16 +391,19 @@ var Domain = (function () {
     out.ContractQuotes = db.ContractQuotes.filter(
       (l) => cids.has(l.contractId) && qids.has(l.quoteId),
     );
-    out.Attachments = db.Attachments.filter(
-      (a) =>
-        a.entity === "Company" ||
-        (a.entity === "Vendors" &&
-          out.Vendors.some((v) => v.id === a.entityId)) ||
-        (a.entity === "Quotations"
-          ? qids.has(a.entityId)
-          : a.entity === "Procurements"
-            ? pids.has(a.entityId)
-            : jids.has(a.entityId)),
+    out.CompanyFiles = has(u, ["finance"]) ? db.CompanyFiles : [];
+    const companyFileIds = new Set(out.CompanyFiles.map((d) => d.id));
+    out.Attachments = db.Attachments.filter((a) =>
+      a.entity === "CompanyFiles"
+        ? companyFileIds.has(a.entityId)
+        : a.entity === "Company" ||
+          (a.entity === "Vendors" &&
+            out.Vendors.some((v) => v.id === a.entityId)) ||
+          (a.entity === "Quotations"
+            ? qids.has(a.entityId)
+            : a.entity === "Procurements"
+              ? pids.has(a.entityId)
+              : jids.has(a.entityId)),
     );
     out.AuditLog = has(u, []) ? db.AuditLog.slice(-100).reverse() : [];
     out.Settings = db.Settings;
@@ -411,7 +420,8 @@ var Domain = (function () {
       (x) =>
         qids.has(x.quoteId) ||
         poids.has(x.purchaseOrderId) ||
-        rfqIds.has(x.rfqId),
+        rfqIds.has(x.rfqId) ||
+        (x.kind === "tempDelivery" && jids.has(x.snapshot?.job?.id)),
     );
     out.Outbox = has(u, [])
       ? db.Outbox
@@ -423,6 +433,38 @@ var Domain = (function () {
       stages: STAGES,
       reports: Advanced.reports(out),
     };
+  }
+  function normalizePresentation(v, h) {
+    const result = {};
+    for (const k of [
+      "tag",
+      "source",
+      "saleName",
+      "salePhone",
+      "customerFax",
+      "customerPO",
+      "validity",
+      "paymentMethod",
+    ])
+      result[k] = h.str(v[k], 200);
+    result.saleEmail = h.str(v.saleEmail, 200);
+    result.expires = h.date(v.expires, true);
+    result.pricePeriod = ["month", "year"].includes(v.pricePeriod)
+      ? v.pricePeriod
+      : "";
+    result.color = /^#[0-9a-f]{6}$/i.test(v.color || "") ? v.color : "#1a3a5c";
+    result.fonts = {};
+    for (const k of ["info", "items", "totals", "notes"])
+      result.fonts[k] = h.num(v.fonts?.[k] ?? 12, 8, 20);
+    result.columns = {};
+    for (const k of ["pn", "qty", "unit", "price", "disc", "total"])
+      result.columns[k] = v.columns?.[k] !== false;
+    result.pad = h.num(v.pad ?? 4, 0, 16);
+    result.lineHeight = h.num(v.lineHeight ?? 1.35, 1, 2.5);
+    result.colLines = v.colLines === true;
+    result.discountMode = v.discountMode === "amount" ? "amount" : "pct";
+    result.discountAmount = h.num(v.discountAmount || 0, 0);
+    return result;
   }
   function execute(source, u, req, ctx) {
     assert(req && typeof req.action === "string", "คำขอไม่ถูกต้อง");
@@ -596,12 +638,18 @@ var Domain = (function () {
         );
         const items = p.items.map((it, sort) => {
           const type = it.type || "item";
+          const presentation = {
+            rowHeight: num(it.rowHeight || 0, 0, 600),
+            displayNo: str(it.displayNo, 20),
+            priceText: str(it.priceText, 80),
+          };
           assert(
             ["item", "group", "note", "blank", "pagebreak"].includes(type),
             "ชนิดบรรทัดไม่ถูกต้อง",
           );
           if (type !== "item")
             return {
+              ...presentation,
               type,
               name: str(it.name),
               description: str(it.description),
@@ -615,11 +663,19 @@ var Domain = (function () {
               catalogId: "",
               discountPct: 0,
             };
+          assert(
+            !presentation.priceText ||
+              !Number.isFinite(
+                Number(presentation.priceText.replace(/,/g, "")),
+              ),
+            "ราคาตัวเลขต้องใส่ในช่องราคา",
+          );
           if (it.catalogId) active("Catalog", it.catalogId);
           const qty = num(it.qty, 0.001, 1e6),
-            price = money(num(it.price, 0)),
+            price = presentation.priceText ? 0 : money(num(it.price, 0)),
             discountPct = num(it.discountPct || 0, 0, 100);
           return {
+            ...presentation,
             type,
             name: required(it.name, "ชื่อสินค้า"),
             catalogId: str(it.catalogId),
@@ -639,11 +695,19 @@ var Domain = (function () {
           "ต้องมีสินค้าอย่างน้อย 1 รายการ",
         );
         const subtotal = money(items.reduce((s, i) => s + i.total, 0)),
-          discountPct = num(p.discountPct || 0, 0, 100),
+          discountPct =
+            p.discountMode === "amount"
+              ? (num(p.discountAmount || 0, 0, subtotal) / (subtotal || 1)) *
+                100
+              : num(p.discountPct || 0, 0, 100),
           vatPct = num(p.vatPct == null ? 7 : p.vatPct, 0, 100);
         const discount = money((subtotal * discountPct) / 100),
           vat = money(((subtotal - discount) * vatPct) / 100);
         const values = {
+          presentation: normalizePresentation(
+            p.presentation || old?.presentation || {},
+            { str, num, date },
+          ),
           customerId: customer.id,
           customer: JSON.parse(JSON.stringify(customer)),
           company: db.Company[0] || {},
@@ -660,6 +724,10 @@ var Domain = (function () {
           approverEmail: "",
           closed: false,
         };
+        values.presentation.discountMode =
+          p.discountMode === "amount" ? "amount" : "pct";
+        values.presentation.discountAmount =
+          p.discountMode === "amount" ? discount : 0;
         result = old
           ? change("Quotations", old, values)
           : add(
@@ -1139,7 +1207,8 @@ var Domain = (function () {
         break;
       }
       case "attachFile": {
-        visibleEntity(db, u, p.entity, p.entityId, true);
+        const parentRecord = visibleEntity(db, u, p.entity, p.entityId, true);
+        if (p.entity === "CompanyFiles") version(parentRecord);
         if (p.relatedTable || p.relatedId) {
           assert(
             [
@@ -1185,6 +1254,10 @@ var Domain = (function () {
           relatedTable: str(p.relatedTable),
           relatedId: str(p.relatedId),
         });
+        if (p.entity === "CompanyFiles")
+          change("CompanyFiles", parentRecord, {
+            currentAttachmentId: result.id,
+          });
         break;
       }
       default:
@@ -1222,7 +1295,21 @@ var Domain = (function () {
     );
     return { db, result: reply, replayed: false };
   }
+  function allowedAttachmentType(entity, mimeType) {
+    return (
+      /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(mimeType) ||
+      (entity === "CompanyFiles" &&
+        [
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "text/plain",
+          "text/csv",
+        ].includes(mimeType))
+    );
+  }
   return {
+    allowedAttachmentType,
     SCHEMA,
     JSON_FIELDS,
     ROLES,

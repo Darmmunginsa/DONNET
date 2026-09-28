@@ -684,3 +684,52 @@ test("deactivating yourself or omitting roles is rejected", () => {
     /ตนเอง/,
   );
 });
+
+test("temporary delivery exposes no prices to assigned tech and rejects another tech", () => {
+  const h = harness(),
+    qid = h.quote();
+  h.approve(qid);
+  const j = h.command("sales", "assignJob", {
+    quoteId: qid,
+    techEmail: "tech@example.test",
+    title: "ส่งสินค้า",
+    scheduledAt: "2026-09-27",
+  });
+  const doc = h.command("tech", "issueDocument", {
+    kind: "tempDelivery",
+    jobId: j.id,
+    date: "2026-09-27",
+  });
+  const view = D.snapshot(h.db, D.user(h.db, "tech@example.test")).data;
+  assert.equal(view.Documents.length, 1);
+  assert.equal(view.Documents[0].id, doc.id);
+  const snap = view.Documents[0].snapshot;
+  assert(!("total" in snap.quote));
+  assert(!("price" in snap.items[0]));
+  assert(!("cost" in snap.items[0]));
+  assert.equal(snap.items[0].qty, 2);
+  const html = require("../src/document-forms.js").render(view.Documents[0]);
+  assert(html.includes("TEMPORARY DELIVERY NOTE"));
+  assert(!html.includes("UNIT PRICE"));
+  assert(!html.includes("GRAND TOTAL"));
+  h.command("admin", "saveMaster", {
+    table: "Users",
+    data: {
+      name: "Other",
+      email: "other@example.test",
+      roles: ["tech"],
+      active: true,
+    },
+  });
+  assert.throws(() =>
+    h.command("other", "issueDocument", {
+      kind: "tempDelivery",
+      jobId: j.id,
+      date: "2026-09-27",
+    }),
+  );
+  assert.equal(
+    D.snapshot(h.db, D.user(h.db, "other@example.test")).data.Documents.length,
+    0,
+  );
+});

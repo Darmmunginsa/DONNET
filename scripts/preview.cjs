@@ -63,7 +63,7 @@ function invoke(method, args) {
     if (req.action !== "attachFile") throw new Error("คำขอไม่ถูกต้อง");
     Domain.visibleEntity(db, u, req.payload.entity, req.payload.entityId, true);
     if (
-      !/^(image\/(png|jpeg|webp)|application\/pdf)$/.test(f.mimeType) ||
+      !Domain.allowedAttachmentType(req.payload.entity, f.mimeType) ||
       Buffer.from(f.base64, "base64").length > 5 * 1024 * 1024
     )
       throw new Error("ไฟล์ไม่ถูกต้อง");
@@ -111,6 +111,15 @@ const server = http.createServer(async (req, res) => {
       "/style.css": ["style.css", "text/css; charset=utf-8"],
       "/app.js": ["app.js", "text/javascript; charset=utf-8"],
       "/advanced.js": ["advanced.js", "text/javascript; charset=utf-8"],
+      "/document-forms.js": [
+        "document-forms.js",
+        "text/javascript; charset=utf-8",
+      ],
+      "/company-library.js": [
+        "company-library.js",
+        "text/javascript; charset=utf-8",
+      ],
+      "/quote-tools.js": ["quote-tools.js", "text/javascript; charset=utf-8"],
       "/features.js": ["features.js", "text/javascript; charset=utf-8"],
     };
     const file = routes[req.url];
@@ -124,7 +133,7 @@ const server = http.createServer(async (req, res) => {
         .replace("<!-- STYLES -->", '<link rel="stylesheet" href="/style.css">')
         .replace(
           "<!-- SCRIPT -->",
-          '<script src="/advanced.js"></script><script src="/app.js"></script><script src="/features.js"></script>',
+          '<script src="/advanced.js"></script><script src="/app.js"></script><script src="/document-forms.js"></script><script src="/features.js"></script><script src="/quote-tools.js"></script><script src="/company-library.js"></script>',
         );
     res.writeHead(200, { "Content-Type": file[1] });
     return res.end(content);

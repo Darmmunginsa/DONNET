@@ -264,8 +264,10 @@ function uploadAttachment(token, request, file) {
       file.base64.length > 7000000
     )
       throw new Error("ไฟล์ใหญ่เกิน 5 MB");
-    if (!/^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.mimeType))
-      throw new Error("รองรับ PDF, PNG, JPG และ WebP");
+    if (!Domain.allowedAttachmentType(request.payload.entity, file.mimeType))
+      throw new Error(
+        "ชนิดไฟล์ไม่รองรับ (คลังบริษัทรับ PDF รูปภาพ DOCX XLSX PPTX TXT CSV)",
+      );
     var bytes = Utilities.base64Decode(file.base64);
     if (!bytes.length || bytes.length > 5 * 1024 * 1024)
       throw new Error("ไฟล์ว่างหรือใหญ่เกิน 5 MB");

@@ -10,6 +10,9 @@ for (const name of [
   "domain.js",
   "app.js",
   "features.js",
+  "document-forms.js",
+  "quote-tools.js",
+  "company-library.js",
   "Server.gs",
 ])
   new vm.Script(fs.readFileSync(path.join(src, name), "utf8"), {
@@ -40,7 +43,13 @@ fs.writeFileSync(
     "\n" +
     fs.readFileSync(path.join(src, "app.js"), "utf8") +
     "\n" +
+    fs.readFileSync(path.join(src, "document-forms.js"), "utf8") +
+    "\n" +
     fs.readFileSync(path.join(src, "features.js"), "utf8") +
+    "\n" +
+    fs.readFileSync(path.join(src, "quote-tools.js"), "utf8") +
+    "\n" +
+    fs.readFileSync(path.join(src, "company-library.js"), "utf8") +
     "\n</script>",
 );
 fs.writeFileSync(

@@ -6,6 +6,7 @@ const Features = (() => {
     baseContract = contractForm;
   const kindLabels = {
     quotation: "ใบเสนอราคา",
+    tempDelivery: "ใบส่งของชั่วคราว",
     invoice: "ใบส่งสินค้า / ใบแจ้งหนี้ / ใบวางบิล",
     receipt: "ใบเสร็จรับเงิน",
     taxInvoice: "ใบเสร็จรับเงิน / ใบกำกับภาษี",
@@ -319,51 +320,21 @@ const Features = (() => {
       imageHtml(c.signatureAttachmentId, "document-signature"),
       imageHtml(c.stampAttachmentId, "document-stamp"),
     ]);
-    let rows = s.items || [],
-      summary = "",
-      note = q?.terms || po?.paymentTerms || s.rfq?.note || "";
-    if (q) summary = totals(q);
-    if (po)
-      summary = `<div class="totals"><div><span>รวมสินค้า</span><span>${money(po.subtotal ?? po.total)}</span></div><div><span>ส่วนลด</span><span>${money(po.discount || 0)}</span></div><div><span>VAT ${po.vatPct || 0}%</span><span>${money(po.vat || 0)}</span></div><div class="grand"><span>รวมสุทธิ</span><span>${money(po.total)}</span></div></div>`;
-    if (payment) {
-      const gross = payment.amount + payment.withholding,
-        base = Math.round((gross / (1 + q.vatPct / 100)) * 100) / 100,
-        vat = Math.round((gross - base) * 100) / 100;
-      rows = [
-        {
-          type: "item",
-          name:
-            "รับชำระตาม " + q.number + " วันที่ " + displayDate(payment.date),
-          qty: 1,
-          unit: "งวด",
-          price: base,
-          total: base,
-        },
-      ];
-      summary = `<div class="totals"><div><span>มูลค่าก่อนภาษี</span><span>${money(base)}</span></div><div><span>VAT ${q.vatPct}%</span><span>${money(vat)}</span></div><div><span>หัก ณ ที่จ่าย</span><span>${money(payment.withholding)}</span></div><div class="grand"><span>รับเงินสุทธิ</span><span>${money(payment.amount)}</span></div></div>`;
-    }
-    const copies = s.copies || [{ label: "ต้นฉบับ", color: "#17654f" }];
-    $("#print-area").innerHTML = copies
-      .map(
-        (copy) =>
-          `<article class="document document-copy" style="--copy-color:${esc(copy.color)}"><div class="copy-label">${esc(copy.label)}</div><div class="document-head"><div>${logo}<h2>${esc(c.name || "บริษัท")}</h2><p class="pre-line">${esc(c.address)}<br>เลขผู้เสียภาษี ${esc(c.taxId)} · สาขา ${esc(c.branch || "สำนักงานใหญ่")}<br>${esc(c.phone)}</p></div><div><h1>${kindLabels[doc.kind]}</h1><strong>${esc(doc.number)}</strong><p>วันที่ ${displayDate(doc.date)}<br>อ้างอิง ${esc(q?.number || po?.number || s.rfq?.number)}</p></div></div><h3>${esc(party.name)}</h3><p class="pre-line">${esc(party.address || "")}<br>เลขผู้เสียภาษี ${esc(party.taxId || "—")}</p>${table(
-            ["รายการ", "จำนวน", "ราคาต่อหน่วย", "รวม"],
-            rows.map((i) =>
-              i.type === "pagebreak"
-                ? '<tr class="print-break"><td colspan="4"></td></tr>'
-                : i.type && i.type !== "item"
-                  ? `<tr><td colspan="4">${esc(i.name || i.description)}</td></tr>`
-                  : `<tr><td>${esc(i.name)}<small>${esc(i.partNo || "")} ${esc(i.description || "")}</small></td><td>${i.qty} ${esc(i.unit)}</td><td>${doc.kind === "rfq" ? "" : money(i.price ?? i.unitPrice)}</td><td>${doc.kind === "rfq" ? "" : money(i.total)}</td></tr>`,
-            ),
-          )}${summary}<p class="pre-line">${esc(note)}</p><div class="document-sign"><div>${signature}${stamp}<p>ผู้มีอำนาจลงนาม / ผู้ส่งมอบ</p></div><div><div class="signature-space"></div><p>ผู้รับเอกสาร / ผู้รับมอบ</p></div></div></article>`,
-      )
-      .join("");
+    const source = (html) => html.match(/src="([^"]+)"/)?.[1] || "";
+    $("#print-area").innerHTML = DocumentForms.render(doc, {
+      logo: source(logo),
+      signature: source(signature),
+      stamp: source(stamp),
+    });
     await Promise.all(
       Array.from($("#print-area").querySelectorAll("img")).map((img) =>
         img.decode().catch(() => {}),
       ),
     );
-    window.print();
+    showDocumentPreview(
+      $("#print-area").innerHTML,
+      kindLabels[doc.kind] + " · " + doc.number,
+    );
   }
   function exportForm() {
     const excluded = [
@@ -711,6 +682,10 @@ const Features = (() => {
         return issue("quotation", { quoteId: id });
       case "print-invoice":
         return issue("invoice", { quoteId: id });
+      case "print-temp-delivery":
+        return issue("tempDelivery", { quoteId: id });
+      case "print-job-delivery":
+        return issue("tempDelivery", { jobId: id });
       case "print-po":
         return issue("purchaseOrder", { purchaseOrderId: id });
       case "print-receipt": {

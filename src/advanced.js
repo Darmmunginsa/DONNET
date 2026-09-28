@@ -3,6 +3,16 @@ var Advanced = (function () {
   "use strict";
   const fields = {
     Settings: ["key", "value"],
+    CompanyFiles: [
+      "title",
+      "category",
+      "documentNo",
+      "issuedDate",
+      "expiresDate",
+      "note",
+      "archived",
+      "currentAttachmentId",
+    ],
     ApprovalRules: [
       "name",
       "minAmount",
@@ -78,7 +88,9 @@ var Advanced = (function () {
       "belowCostReason",
       "revisionOf",
       "revision",
+      "presentation",
     ],
+    QuoteItems: ["priceText", "rowHeight", "displayNo"],
     Procurements: ["assetCategory", "cancelled", "cancelReason"],
     PurchaseOrders: [
       "subtotal",
@@ -97,7 +109,13 @@ var Advanced = (function () {
     Contracts: ["alertDays", "alertEmails"],
     Attachments: ["relatedTable", "relatedId"],
   };
-  const JSON_FIELDS = ["value", "itemIds", "snapshot", "alertEmails"];
+  const JSON_FIELDS = [
+    "value",
+    "itemIds",
+    "snapshot",
+    "alertEmails",
+    "presentation",
+  ];
   const sum = (rows, key) => rows.reduce((s, r) => s + Number(r[key] || 0), 0);
   const round = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
   function reservedQty(db, item) {
@@ -237,7 +255,8 @@ var Advanced = (function () {
           probability =
             q.dealStage === "won" ? 100 : Number(q.probability ?? 50);
         const net = q.subtotal - q.discount;
-        if (!months[month]) months[month] = { month, pipeline: 0, weighted: 0, count: 0 };
+        if (!months[month])
+          months[month] = { month, pipeline: 0, weighted: 0, count: 0 };
         months[month].pipeline = round(months[month].pipeline + net);
         months[month].weighted = round(
           months[month].weighted + (net * probability) / 100,
@@ -388,6 +407,43 @@ var Advanced = (function () {
     } = c;
     let r;
     switch (req.action) {
+      case "saveCompanyFile": {
+        permit(u, []);
+        const old = p.id ? get(db, "CompanyFiles", p.id) : null;
+        if (old) version(old);
+        const values = {
+          title: required(p.title, "ชื่อเอกสาร"),
+          category: required(p.category, "หมวดหมู่"),
+          documentNo: str(p.documentNo, 100),
+          issuedDate: date(p.issuedDate, true),
+          expiresDate: date(p.expiresDate, true),
+          note: str(p.note),
+        };
+        assert(
+          values.title.length <= 200 && values.category.length <= 80,
+          "ชื่อเอกสารหรือหมวดหมู่ยาวเกินกำหนด",
+        );
+        assert(
+          !values.issuedDate ||
+            !values.expiresDate ||
+            values.expiresDate >= values.issuedDate,
+          "วันหมดอายุต้องไม่ก่อนวันที่ออกเอกสาร",
+        );
+        return old
+          ? change("CompanyFiles", old, values)
+          : add("CompanyFiles", {
+              ...values,
+              archived: false,
+              currentAttachmentId: "",
+            });
+      }
+      case "archiveCompanyFile": {
+        permit(u, []);
+        r = get(db, "CompanyFiles", p.id);
+        version(r);
+        assert(typeof p.archived === "boolean", "สถานะไม่ถูกต้อง");
+        return change("CompanyFiles", r, { archived: p.archived });
+      }
       case "saveWorkspaceSettings": {
         permit(u, []);
         const v = p.data || {},
@@ -818,6 +874,7 @@ var Advanced = (function () {
         assert(
           [
             "quotation",
+            "tempDelivery",
             "invoice",
             "receipt",
             "taxInvoice",
@@ -832,7 +889,36 @@ var Advanced = (function () {
           purchaseOrderId = "",
           paymentId = "",
           rfqId = "";
-        if (
+        if (p.kind === "tempDelivery") {
+          const job = p.jobId ? jobRead(db, u, p.jobId) : null;
+          const q = job
+            ? get(db, "Quotations", job.quoteId)
+            : quoteRead(db, u, p.quoteId);
+          assert(q.status === "approved", "ใบเสนอราคายังไม่อนุมัติ");
+          assert(!job || job.status !== "cancelled", "งานช่างถูกยกเลิก");
+          quoteId = q.id;
+          snapshot = {
+            company: q.company,
+            party: q.customer,
+            quote: {
+              number: q.number,
+              date: q.date,
+              note: job?.completionNote || job?.note || "",
+            },
+            items: db.QuoteItems.filter((i) => i.quoteId === q.id).map((i) => ({
+              type: i.type,
+              name: i.name,
+              description: i.description,
+              partNo: i.partNo,
+              qty: i.qty,
+              unit: i.unit,
+              displayNo: i.displayNo,
+              rowHeight: i.rowHeight,
+            })),
+            job: job ? { id: job.id, title: job.title } : null,
+          };
+          prefix = "TD";
+        } else if (
           ["quotation", "invoice", "receipt", "taxInvoice"].includes(p.kind)
         ) {
           const q = quoteRead(db, u, p.quoteId);
